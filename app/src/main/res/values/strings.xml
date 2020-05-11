@@ -9,5 +9,5 @@
     <string name="menuListHistory">Clear history</string>
     <string name="menuInfo">Info</string>
     <string name="format_chronometer">%02d:%02d:%02d</string>
-    <string name="rangeFormat">Range: %002d km</string>
+    <string name="rangeFormat">Range: %02f km</string>
 </resources>

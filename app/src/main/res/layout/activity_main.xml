@@ -8,7 +8,7 @@
 
     <Button
         android:id="@+id/imbStart"
-        android:layout_width="wrap_content"
+        android:layout_width="235dp"
         android:layout_height="wrap_content"
         android:paddingHorizontal="60dp"
         android:paddingVertical="6dp"
@@ -31,7 +31,7 @@
         android:paddingHorizontal="60dp"
         android:paddingVertical="6dp"
         android:text="Statistic"
-        android:textSize="23sp"
+        android:textSize="24sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

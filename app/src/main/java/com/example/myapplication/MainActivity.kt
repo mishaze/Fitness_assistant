@@ -54,7 +54,6 @@ class MainActivity : AppCompatActivity() {
 
     private var range:Double = 0.0
 
-    private val userTime = UserTime()
 
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -126,11 +125,11 @@ class MainActivity : AppCompatActivity() {
        if( !isRunning) {
            range=0.0
            isRunning= true
-           fusedLocationClient.lastLocation
-               .addOnSuccessListener { location: Location? ->
-                   latitude1 = location?.latitude!!
-                   longitude1 = location.longitude
-               }
+           //fusedLocationClient.lastLocation
+              // .addOnSuccessListener { location: Location? ->
+                //   latitude1 = location?.latitude!!
+                //   longitude1 = location.longitude
+           //    }
        imbStart.setText(R.string.stop)
        }
        else{
@@ -167,23 +166,23 @@ class MainActivity : AppCompatActivity() {
                     secondTime++
 
 
-                fusedLocationClient.lastLocation
-                    .addOnSuccessListener { location: Location? ->
-                        latitude2 = location?.latitude!!
-                        longitude2 = location.longitude
-                    }
+              //  fusedLocationClient.lastLocation
+                 //   .addOnSuccessListener { location: Location? ->
+                  //      latitude2 = location?.latitude!!
+                     //   longitude2 = location.longitude
+                  //  }
 
-                range=range+(6356*2*Math.asin(sqrt(pow(sin((latitude2-latitude1)*
-                        (3.1415926535/180.0)/2),2.0)+ cos(latitude1*(3.1415926535/180.0))
-                        *sin(latitude2*(3.1415926535/180.0))* pow(
-                    sin((longitude2-longitude1)*(3.1415926535/180.0) /2) ,2.0))))
+               // range=range+(6356*2*Math.asin(sqrt(pow(sin((latitude2-latitude1)*
+                //        (3.1415926535/180.0)/2),2.0)+ cos(latitude1*(3.1415926535/180.0))
+                   //     *sin(latitude2*(3.1415926535/180.0))* pow(
+                 //   sin((longitude2-longitude1)*(3.1415926535/180.0) /2) ,2.0))))
 
 
 
                 latitude1 =latitude2
                 longitude1 = longitude2
 
-                txtDistanc!!.text = range.toString()
+                txtDistanc!!.text = "Range $range km"
 
                 handler.postDelayed(this, 1000)
             }
