@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Fitnes Asistant</string>
+    <string name="time">00:00:00</string>
+    <string name="start">START</string>
+    <string name="stop">STOP</string>
+    <string name="textList">Show time list</string>
+    <string name="messageList">Your terning saves </string>
+    <string name="messageDelete">List delete successfully.</string>
+    <string name="menuListHistory">Clear history</string>
+    <string name="menuInfo">Info</string>
+    <string name="format_chronometer">%02d:%02d:%02d</string>
+    <string name="rangeFormat">Range: %002d km</string>
+</resources>
