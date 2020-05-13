@@ -3,35 +3,46 @@ package com.example.myapplication
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.location.Location
+import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
+import com.example.myapplication.MyApp.Companion.context
+import com.google.android.gms.location.*
 import kotlinx.android.synthetic.main.activity_main.*
 import java.lang.Double.NaN
 import java.lang.Math.*
+import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-private lateinit var fusedLocationClient: FusedLocationProviderClient
 
 @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+
+object DistanceTracker {
+    var totalDistance: Long = 0L
+}
+
 class MainActivity : AppCompatActivity() {
 
     companion object {
@@ -39,36 +50,154 @@ class MainActivity : AppCompatActivity() {
         private const val TIME_LIST_KEY = "TimeList"
     }
 
+    private var mFusedLocationProviderClient: FusedLocationProviderClient? = null
+    private val INTERVAL: Long = 2000
+    private val FASTEST_INTERVAL: Long = 1000
+
+    lateinit var firstLocation: Location
+    private var lastLocation: Location? = null
+
+    internal lateinit var mLocationRequest: LocationRequest
+    private val REQUEST_PERMISSION_LOCATION = 10
+
     private var secondTime = 0
     private var isRunning = false
-    private var timeList: ArrayList<String>?=null
+    private var timeList: ArrayList<String>? = null
     private var txtChronometer: TextView? = null
     private var txtDistanc: TextView? = null
-    private var calculatedDistance: Long = 0
 
-    private var latitude1:Double=0.0
-    private var longitude1:Double=0.0
-
-    private var latitude2:Double=0.0
-    private var longitude2:Double=0.0
-
-    private var range:Double = 0.0
-
+    var totalDistance: Long = 0L
 
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        checkPermission()
-        txtDistanc=findViewById(R.id.distance)
-        txtChronometer = findViewById(R.id.txtChrono)
-        //requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        mLocationRequest = LocationRequest()
 
+        txtDistanc = findViewById(R.id.distance)
+        txtChronometer = findViewById(R.id.txtChrono)
+
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            buildAlertMessageNoGps()
+        }
 
         runChronometer()
     }
+
+
+    private fun buildAlertMessageNoGps() {
+
+        val builder = AlertDialog.Builder(this)
+        builder.setMessage("Your GPS seems to be disabled, do you want to enable it?")
+            .setCancelable(false)
+            .setPositiveButton("Yes") { dialog, id ->
+                startActivityForResult(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                    , 11)
+            }
+            .setNegativeButton("No") { dialog, id ->
+                dialog.cancel()
+                finish()
+            }
+        val alert: AlertDialog = builder.create()
+        alert.show()
+    }
+
+     fun startLocationUpdates() {
+
+        // Create the location request to start receiving updates
+
+        mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        mLocationRequest.setInterval(INTERVAL)
+        mLocationRequest.setFastestInterval(FASTEST_INTERVAL)
+
+        // Create LocationSettingsRequest object using location request
+        val builder = LocationSettingsRequest.Builder()
+        builder.addLocationRequest(mLocationRequest)
+        val locationSettingsRequest = builder.build()
+
+        val settingsClient = LocationServices.getSettingsClient(this)
+        settingsClient.checkLocationSettings(locationSettingsRequest)
+
+        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
+        // new Google API SDK v11 uses getFusedLocationProviderClient(this)
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return
+        }
+        mFusedLocationProviderClient!!.requestLocationUpdates(mLocationRequest, mLocationCallback,
+            Looper.myLooper())
+    }
+
+    private val mLocationCallback = object : LocationCallback() {
+        override fun onLocationResult(result: LocationResult?) {
+            // do work here
+            //locationResult.lastLocation
+            result?.let {
+
+                if(lastLocation == null){
+                    lastLocation = it.lastLocation
+                    return@let
+                }
+
+                it.lastLocation?.let { its_last ->
+
+                    val distanceInMeters = its_last.distanceTo(lastLocation)
+
+                    totalDistance =totalDistance+ distanceInMeters.toLong()
+                    txtDistanc!!.text = getString(R.string.rangeFormat,totalDistance)
+
+
+                    if(BuildConfig.DEBUG){
+                        //Log.d("TRACKER", "Completed: ${DistanceTracker.totalDistance} meters, (added $distanceInMeters)")
+                    }
+
+                }
+
+                lastLocation = it.lastLocation
+
+            }
+
+            super.onLocationResult(result)
+        }
+    }
+
+
+
+
+    private fun stoplocationUpdates() {
+        mFusedLocationProviderClient!!.removeLocationUpdates(mLocationCallback)
+    }
+
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        if (requestCode == REQUEST_PERMISSION_LOCATION) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startLocationUpdates()
+
+            } else {
+                Toast.makeText(this@MainActivity, "Permission Denied", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    fun checkPermissionForLocation(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+            if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED) {
+                true
+            } else {
+                // Show the permission request
+                ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                    REQUEST_PERMISSION_LOCATION)
+                false
+            }
+        } else {
+            true
+        }
+    }
+
 
 
     override fun onStart() {
@@ -78,14 +207,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-
         if (isRunning)
-            isRunning = true
+            isRunning = false
     }
 
     override fun onResume() {
         super.onResume()
-
         verifyInitTime()
         verifyIntent()
         restartChronometer()
@@ -93,14 +220,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
-
         if (isRunning)
             isRunning = true
     }
 
     override fun onRestart() {
         super.onRestart()
-
         if (!isRunning)
             isRunning = true
     }
@@ -119,28 +244,25 @@ class MainActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    @SuppressLint("SetTextI18n", "ResourceAsColor")
-    fun onClickStart(view: View) {
-       if( !isRunning) {
-           range=0.0
-           isRunning= true
-           //fusedLocationClient.lastLocation
-              // .addOnSuccessListener { location: Location? ->
-                //   latitude1 = location?.latitude!!
-                //   longitude1 = location.longitude
-           //    }
-       imbStart.setText(R.string.stop)
-       }
-       else{
-           isRunning = false
-           saveTimes()
-           secondTime = 0
-           imbStart.setText(R.string.start)
-           stopService(this.intent)
-       }
-    }
 
+    fun onClickStart(view: View) {
+        if (!isRunning) {
+
+            isRunning = true
+
+            if (checkPermissionForLocation(this)) {
+                startLocationUpdates()}
+            imbStart.setText(R.string.stop)
+        } else {
+            isRunning = false
+
+            stoplocationUpdates()
+            saveTimes()
+            secondTime = 0
+            imbStart.setText(R.string.start)
+
+        }
+    }
 
     fun onActivityListChronometer(view: View) {
         val listIntent = Intent(this, TimeListActivity::class.java)
@@ -157,32 +279,22 @@ class MainActivity : AppCompatActivity() {
             @SuppressLint("StringFormatMatches", "SetTextI18n")
             override fun run() {
                 val hours = secondTime / 3600
-                val minutes = secondTime % 3600/60
+                val minutes = secondTime % 3600 / 60
                 val seconds = secondTime % 60
 
-                txtChronometer!!.text = getString(R.string.format_chronometer, hours, minutes, seconds)
+                txtChronometer!!.text =
+                    getString(R.string.format_chronometer, hours, minutes, seconds)
 
-                if (isRunning)
+                if (isRunning) {
                     secondTime++
+                }
 
+                //range=range+(6356*2*Math.asin(sqrt(pow(sin((latitude2-latitude)*
+                  //     (3.1415926535/180.0)/2),2.0)+ cos(latitude*(3.1415926535/180.0))
+                    //*sin(latitude2*(3.1415926535/180.0))* pow(
+                   //sin((longitude2-longitude)*(3.1415926535/180.0) /2) ,2.0))))
 
-              //  fusedLocationClient.lastLocation
-                 //   .addOnSuccessListener { location: Location? ->
-                  //      latitude2 = location?.latitude!!
-                     //   longitude2 = location.longitude
-                  //  }
-
-               // range=range+(6356*2*Math.asin(sqrt(pow(sin((latitude2-latitude1)*
-                //        (3.1415926535/180.0)/2),2.0)+ cos(latitude1*(3.1415926535/180.0))
-                   //     *sin(latitude2*(3.1415926535/180.0))* pow(
-                 //   sin((longitude2-longitude1)*(3.1415926535/180.0) /2) ,2.0))))
-
-
-
-                latitude1 =latitude2
-                longitude1 = longitude2
-
-                txtDistanc!!.text = "Range $range km"
+               // txtDistanc!!.text = getString(R.string.rangeFormat,range)
 
                 handler.postDelayed(this, 1000)
             }
@@ -229,36 +341,9 @@ class MainActivity : AppCompatActivity() {
         if (timeList == null)
             timeList = ArrayList()
 
-            timeList!!.add(txtChronometer!!.text.toString())
+        timeList!!.add(txtChronometer!!.text.toString())
 
-            Toast.makeText(this, R.string.messageList, Toast.LENGTH_SHORT).show()
-
-
+        Toast.makeText(this, R.string.messageList, Toast.LENGTH_SHORT).show()
     }
 
-
-    private fun checkPermission() {
-        // Here, thisActivity is the current activity
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_COARSE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED) {
-
-            // Permission is not granted
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.ACCESS_COARSE_LOCATION)) {
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-            } else {
-                // No explanation needed, we can request the permission.
-                ActivityCompat.requestPermissions(this,
-                    arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), 200)
-
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
-            }
-        }
-    }
 }
