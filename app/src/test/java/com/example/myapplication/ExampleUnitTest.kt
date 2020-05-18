@@ -20,14 +20,14 @@ class ExampleUnitTest {
     fun addition_isCorrect() {
 
 
-        print(6356*2*Math.asin(sqrt(
-            Math.pow(
-                sin((0.001*3.1415926535/180.0) / 2),
-                2.0
-            ) + cos(59.0*3.1415926535/180.0)*sin(59.0*3.1415926535/180.0)* Math.pow(
-                sin((0*3.1415926535/180.0) / 2), 2.0
-            )
-        )))
+        val writer = File("outputName.txt").bufferedWriter()
+        writer.append("ssad")
+        writer.close()
+
+        val reader = File("outputName.txt").bufferedReader()
+        print (reader.readLine())
+        reader . close()
+
     }
 
     fun alignFile(inputName: String, lineLength: Int, outputName: String) {
