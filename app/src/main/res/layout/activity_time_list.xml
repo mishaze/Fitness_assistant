@@ -9,6 +9,21 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.myapplication.TimeListActivity">
 
+    <TextView
+        android:id="@+id/kcals"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="kcals"
+        android:textColor="@android:color/black"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@+id/timeRV"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.709"
+        app:layout_constraintStart_toEndOf="@+id/txtRange"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/timeRV"
         android:layout_width="0dp"
@@ -37,14 +52,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="5dp"
-        android:text="Range"
+        android:text="km"
         android:textColor="@android:color/black"
         android:textSize="16sp"
         app:layout_constraintBottom_toTopOf="@+id/timeRV"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.434"
+        app:layout_constraintHorizontal_bias="0.3"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toEndOf="@id/txtTime"
+        app:layout_constraintStart_toEndOf="@id/txtTime"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0" />
 
@@ -53,12 +68,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:text="Speed"
+        android:text="km/h"
         android:textColor="@android:color/black"
         android:textSize="16sp"
         app:layout_constraintBottom_toTopOf="@+id/timeRV"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.304"
+        app:layout_constraintHorizontal_bias="0.286"
         app:layout_constraintStart_toEndOf="@+id/txtRange"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0" />

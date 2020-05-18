@@ -68,8 +68,6 @@ class MainActivity : AppCompatActivity() {
         txtDistanc = findViewById(R.id.distance)
         txtChronometer = findViewById(R.id.txtChrono)
 
-
-
         val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             buildAlertMessageNoGps()
@@ -242,8 +240,8 @@ class MainActivity : AppCompatActivity() {
 
     fun onActivityListChronometer(view: View) {
         val listIntent = Intent(this, TimeListActivity::class.java)
-        listIntent.putExtra(SECOND_KEY, secondTime.toString())
-        listIntent.putStringArrayListExtra(TIME_LIST_KEY, timeList)
+        //listIntent.putExtra(SECOND_KEY, secondTime.toString())
+        //listIntent.putStringArrayListExtra(TIME_LIST_KEY, timeList)
         startActivity(listIntent)
     }
 
@@ -318,7 +316,7 @@ class MainActivity : AppCompatActivity() {
         if (timeList == null)
             timeList = ArrayList()
 
-        timeList!!.add("${txtChronometer!!.text}    ${totalDistance/1000.0}km   ${(totalDistance/(secondTime+0.1))*(36/10)}km/h")
+        timeList!!.add("${txtChronometer!!.text}   ${String.format("%.2f",(totalDistance/1000.0))}        ${String.format("%.2f",(totalDistance/(secondTime+0.1))*(36/10))}          ${String.format("%.2f",(((((16.5 *((totalDistance/(secondTime+0.1))*(36/10)))) *65)*secondTime/60.0)/1000.0))}")
 
 
           context?.openFileOutput("myfile", Context.MODE_PRIVATE).use {
@@ -360,24 +358,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun saveList(){
-        context?.openFileOutput("myfile", Context.MODE_PRIVATE)
+        if (timeList == null)
+            timeList = ArrayList()
 
-        val file = File(context?.filesDir, "myfile").bufferedReader()
+        val file1 = File(context?.filesDir, "myfile")
+        val timeList1 = file1.readLines()
 
-        while(true){
-            val m =  file.readLine()
-            if (m==null){
-                break
-            }
-            else{
-                if (timeList == null)
-                    timeList = ArrayList()
+        timeList1.forEach(){i->timeList!!.add(i)}
 
-               timeList!!.add(m.toString())
-
-            }
-        }
-        file.close()
     }
 
 

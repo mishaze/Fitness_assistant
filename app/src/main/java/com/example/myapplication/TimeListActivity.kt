@@ -30,19 +30,14 @@ class TimeListActivity : AppCompatActivity() {
         val timeList = file.readLines()
 
         timeRV.layoutManager = LinearLayoutManager(this)
-       timeRV.adapter = TimeListAdapter(timeList.reversed())
-    }
-
-    override fun onBackPressed() {
-        super.onBackPressed()
-        val intent = Intent(this, MainActivity::class.java)
-        startActivity(intent)
+        timeRV.adapter = TimeListAdapter(timeList.reversed())
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
-               // backIntent()
+                val intent = Intent(this, MainActivity::class.java)
+                startActivity(intent)
                 true
             }
             else -> super.onOptionsItemSelected(item)
